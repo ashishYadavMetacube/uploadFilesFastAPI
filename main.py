@@ -12,10 +12,12 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 class FileModel(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, index=True)
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     file_location = f"files/{file.filename}"
@@ -43,12 +46,14 @@ async def upload_file(file: UploadFile = File(...)):
     db.close()
     return {"info": f"file '{file.filename}' saved at '{file_location}'"}
 
+
 @app.get("/files/")
 async def read_files():
     db = SessionLocal()
     files = db.query(FileModel).all()
     db.close()
     return files
+
 
 @app.delete("/files/{file_id}")
 async def delete_file(file_id: int):
@@ -63,7 +68,9 @@ async def delete_file(file_id: int):
     os.remove(f"files/{file_to_delete.filename}")
     return {"detail": "File deleted"}
 
+
 app.mount("/files", StaticFiles(directory="files"), name="files")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
@@ -78,3 +85,8 @@ async def index():
         </body>
     </html>
     """
+
+
+@app.get('/health')
+async def health_check():
+    return {'status': 'ok'}
